@@ -1,6 +1,6 @@
-# Pi sample monorepo
+# Pi sample
 
-Przykładowe monorepo z aplikacją webową React + TypeScript + Vite oraz API Node.js + TypeScript + Express.
+Repozytorium z dwiema niezależnymi aplikacjami: webową React + TypeScript + Vite oraz API Node.js + TypeScript + Express. Każda aplikacja ma własne `package.json`, `package-lock.json` i `node_modules`, aby można je było wdrażać osobno.
 
 ## Wymagania
 
@@ -9,14 +9,25 @@ Przykładowe monorepo z aplikacją webową React + TypeScript + Vite oraz API No
 
 ## Instalacja zależności
 
+API:
+
 ```bash
+cd apps/api
+npm install
+```
+
+Frontend:
+
+```bash
+cd apps/web
 npm install
 ```
 
 ## Uruchomienie API
 
 ```bash
-npm run dev:api
+cd apps/api
+npm run dev
 ```
 
 Domyślnie API działa pod adresem `http://localhost:3000`.
@@ -38,7 +49,8 @@ Oczekiwana odpowiedź:
 W drugim terminalu uruchom:
 
 ```bash
-npm run dev:web
+cd apps/web
+npm run dev
 ```
 
 Domyślnie frontend działa pod adresem `http://localhost:5173` i pobiera `GET http://localhost:3000/health`.
@@ -46,27 +58,24 @@ Domyślnie frontend działa pod adresem `http://localhost:5173` i pobiera `GET h
 Jeśli API działa na innym adresie, uruchom frontend z własną zmienną:
 
 ```bash
-VITE_API_URL=http://localhost:3000 npm run dev:web
+cd apps/web
+VITE_API_URL=http://localhost:3000 npm run dev
 ```
 
-## Build obu aplikacji
-
-```bash
-npm run build
-```
-
-## Build pojedynczych aplikacji
+## Build aplikacji
 
 API:
 
 ```bash
-npm -w apps/api run build
+cd apps/api
+npm run build
 ```
 
 Frontend:
 
 ```bash
-npm -w apps/web run build
+cd apps/web
+npm run build
 ```
 
 ## Kontrakt API
