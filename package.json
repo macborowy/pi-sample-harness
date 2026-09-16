@@ -1,0 +1,12 @@
+{
+  "name": "pi-sample-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm -w apps/api run build && npm -w apps/web run build",
+    "dev:api": "npm -w apps/api run dev",
+    "dev:web": "npm -w apps/web run dev"
+  }
+}
