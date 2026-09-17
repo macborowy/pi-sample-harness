@@ -41,12 +41,16 @@ paths:
                 required:
                   - time
                   - hostname
+                  - version
                 properties:
                   time:
                     type: string
                     format: date-time
                   hostname:
                     type: string
+                  version:
+                    type: string
               example:
                 time: '2026-09-17T12:00:00.000Z'
                 hostname: api-host
+                version: 0.0.0

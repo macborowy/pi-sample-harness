@@ -5,6 +5,7 @@ import { hostname } from 'node:os';
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173';
+const appVersion = process.env.APP_VERSION ?? '0.0.0';
 
 app.use(
   cors({
@@ -20,6 +21,7 @@ app.get('/debug', (_req, res) => {
   res.json({
     time: new Date().toISOString(),
     hostname: hostname(),
+    version: appVersion,
   });
 });
 
