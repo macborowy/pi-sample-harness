@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feature",
+    "summary",
+    "frontend",
+    "backend",
+    "crossCuttingAcceptanceCriteria"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "frontend": {
+      "$ref": "#/$defs/agentTask"
+    },
+    "backend": {
+      "$ref": "#/$defs/agentTask"
+    },
+    "crossCuttingAcceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "agentTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "task",
+        "acceptanceCriteria",
+        "dependsOn"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "task": {
+          "type": "string"
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependsOn": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "frontend",
+              "backend"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
