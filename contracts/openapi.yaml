@@ -25,3 +25,28 @@ paths:
                       - ok
               example:
                 status: ok
+  /debug:
+    get:
+      summary: Debug information
+      description: Returns runtime debug information for the API process.
+      operationId: getDebug
+      responses:
+        '200':
+          description: Current runtime debug information.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - time
+                  - hostname
+                properties:
+                  time:
+                    type: string
+                    format: date-time
+                  hostname:
+                    type: string
+              example:
+                time: '2026-09-17T12:00:00.000Z'
+                hostname: api-host
