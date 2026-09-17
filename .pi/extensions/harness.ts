@@ -1,4 +1,6 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
+import path from "node:path"
+
+import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent"
 
 type FeaturePhase =
 	| "waiting-for-agent"
@@ -8,6 +10,7 @@ type FeaturePhase =
 interface FeatureRun {
 	request: string
 	phase: FeaturePhase
+	startedAt: number
 }
 
 export default function featureExtension(pi: ExtensionAPI) {
@@ -45,7 +48,8 @@ export default function featureExtension(pi: ExtensionAPI) {
 
 			activeFeature = {
 				request,
-				phase: "waiting-for-agent"
+				phase: "waiting-for-agent",
+				startedAt: Date.now()
 			}
 
 			ctx.ui.setStatus(
@@ -141,6 +145,93 @@ export default function featureExtension(pi: ExtensionAPI) {
 				"feature",
 				undefined
 			)
+		}
+	})
+
+	pi.on("tool_call", async (event, ctx) => {
+		if (!activeFeature) {
+			return
+		}
+
+		if (
+			isToolCallEventType("write", event) ||
+			isToolCallEventType("edit", event)
+		) {
+			const targetPath = path.resolve(
+				ctx.cwd,
+				event.input.path
+			)
+
+			const repoRoot = path.resolve(ctx.cwd)
+
+			const relativePath = path.relative(
+				repoRoot,
+				targetPath
+			)
+
+			//
+			// 1. No writes outside repository
+			//
+			if (
+				relativePath.startsWith("..") ||
+				path.isAbsolute(relativePath)
+			) {
+				return {
+					block: true,
+					reason:
+						`Feature agent cannot modify files outside repository: ${event.input.path}`
+				}
+			}
+
+			//
+			// 2. Protect the harness itself
+			//
+			const protectedPrefixes = [
+				".pi/extensions/",
+				"harness/"
+			]
+
+			const normalized =
+				relativePath.replaceAll("\\", "/")
+
+			if (
+				protectedPrefixes.some(prefix =>
+					normalized.startsWith(prefix)
+				)
+			) {
+				return {
+					block: true,
+					reason:
+						`Feature agent cannot modify protected harness file: ${normalized}`
+				}
+			}
+		}
+
+		if (isToolCallEventType("bash", event)) {
+			const command =
+				event.input.command.trim()
+
+			const forbiddenPatterns = [
+				/\bgit\s+commit\b/i,
+				/\bgit\s+push\b/i,
+
+				/\bsudo\b/i,
+
+				/\brm\s+-[^\n]*r[^\n]*f\b/i
+			]
+
+			const forbidden =
+				forbiddenPatterns.find(pattern =>
+					pattern.test(command)
+				)
+
+			if (forbidden) {
+				return {
+					block: true,
+					reason:
+						`Command blocked by /feature guardrail: ${command}`
+				}
+			}
 		}
 	})
 }
