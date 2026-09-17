@@ -17,11 +17,20 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.get('/account/me', (_req, res) => {
+  res.json({ username: 'maciej' });
+});
+
+app.get('/api/version', (_req, res) => {
+  res.json({ version: appVersion });
+});
+
 app.get('/debug', (_req, res) => {
   res.json({
     time: new Date().toISOString(),
     hostname: hostname(),
     version: appVersion,
+    randomNumber: Math.random(),
   });
 });
 

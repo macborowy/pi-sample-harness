@@ -1,8 +1,11 @@
 import path from "node:path"
 
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent"
+import { runCoordinator } from "../../harness/src/coordinator"
+import type { FeaturePlan } from "../../harness/src/types"
 
 type FeaturePhase =
+	| "planning"
 	| "waiting-for-agent"
 	| "implementing"
 	| "validating"
@@ -11,6 +14,7 @@ interface FeatureRun {
 	request: string
 	phase: FeaturePhase
 	startedAt: number
+	plan?: FeaturePlan
 }
 
 export default function featureExtension(pi: ExtensionAPI) {
@@ -48,18 +52,67 @@ export default function featureExtension(pi: ExtensionAPI) {
 
 			activeFeature = {
 				request,
-				phase: "waiting-for-agent",
+				phase: "planning",
 				startedAt: Date.now()
 			}
 
 			ctx.ui.setStatus(
 				"feature",
-				`Starting: ${request}`
+				`Planning: ${request}`
 			)
 
-			const prompt = buildFeaturePrompt(request)
+			try {
+				//
+				// STEP 1
+				// Coordinator creates a validated FeaturePlan
+				//
+				const plan = await runCoordinator({
+					request,
+					repoRoot: ctx.cwd,
+					model: ctx.model,
+					thinkingLevel: ctx.thinkingLevel
+				})
 
-			pi.sendUserMessage(prompt)
+				//
+				// STEP 2
+				// Store validated plan as workflow state
+				//
+				activeFeature.plan = plan
+				activeFeature.phase = "waiting-for-agent"
+
+				ctx.ui.notify(
+					`Feature plan created:\n\n${JSON.stringify(plan, null, 2)}`,
+					"info"
+				)
+
+				ctx.ui.setStatus(
+					"feature",
+					`Starting implementation: ${plan.feature}`
+				)
+
+				//
+				// STEP 3
+				// Main Pi agent receives the REQUEST + validated PLAN
+				//
+				const prompt = buildFeatureImplementationPrompt(
+					request,
+					plan
+				)
+
+				pi.sendUserMessage(prompt)
+			} catch (error) {
+				ctx.ui.notify(
+					`Feature planning failed: ${String(error)}`,
+					"error"
+				)
+
+				activeFeature = null
+
+				ctx.ui.setStatus(
+					"feature",
+					undefined
+				)
+			}
 		}
 	})
 
@@ -236,29 +289,53 @@ export default function featureExtension(pi: ExtensionAPI) {
 	})
 }
 
-function buildFeaturePrompt(request: string): string {
-	return `
+function buildFeatureImplementationPrompt(
+  request: string,
+  plan: FeaturePlan
+): string {
+  return `
 You are implementing a feature in the current repository.
 
-## Feature request
+# Original feature request
 
 ${request}
 
-## Instructions
+# Validated implementation plan
 
-1. Inspect the repository before making changes
-2. Understand the existing architecture and conventions
-3. Implement the requested feature
-4. Keep the change limited to what is necessary for this feature
-5. Do not commit or push changes
-6. Do not deploy anything
-7. Do not modify CI/CD configuration unless the feature explicitly requires it
-8. When implementation is complete, summarize:
-   - what you changed
-   - which files you changed
-   - any assumptions you made
+${JSON.stringify(plan, null, 2)}
 
-Do not merely describe how to implement the feature.
+# Your responsibility
+
+Implement the feature according to the validated FeaturePlan.
+
+The FeaturePlan defines WHAT needs to be achieved.
+You are responsible for determining HOW to implement it correctly
+within the existing architecture.
+
+# Instructions
+
+1. Inspect relevant existing code before modifying it
+2. Follow the existing architecture and repository conventions
+3. Implement all required parts of the FeaturePlan
+4. Satisfy all applicable acceptance criteria
+5. Do not implement areas where "required" is false
+6. Keep changes limited to this feature
+7. Do not modify the FeaturePlan
+8. Do not modify the harness
+9. Do not commit or push changes
+10. Do not deploy anything
+11. Do not run harness validation yourself
+
+When implementation is complete, summarize:
+
+- what you changed
+- which files you changed
+- which acceptance criteria you addressed
+- any assumptions you made
+
+The harness will independently validate the implementation after you finish.
+
+Do not merely describe the implementation.
 Implement it in the repository.
 `.trim()
 }

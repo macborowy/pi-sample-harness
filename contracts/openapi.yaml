@@ -25,6 +25,48 @@ paths:
                       - ok
               example:
                 status: ok
+  /account/me:
+    get:
+      summary: Current account
+      description: Returns the current account profile.
+      operationId: getAccountMe
+      responses:
+        '200':
+          description: Current account profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - username
+                properties:
+                  username:
+                    type: string
+                    enum:
+                      - maciej
+              example:
+                username: maciej
+  /api/version:
+    get:
+      summary: Application version
+      description: Returns the configured application version.
+      operationId: getApiVersion
+      responses:
+        '200':
+          description: Current application version.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - version
+                properties:
+                  version:
+                    type: string
+              example:
+                version: 0.0.0
   /debug:
     get:
       summary: Debug information
@@ -42,6 +84,7 @@ paths:
                   - time
                   - hostname
                   - version
+                  - randomNumber
                 properties:
                   time:
                     type: string
@@ -50,7 +93,10 @@ paths:
                     type: string
                   version:
                     type: string
+                  randomNumber:
+                    type: number
               example:
                 time: '2026-09-17T12:00:00.000Z'
                 hostname: api-host
                 version: 0.0.0
+                randomNumber: 0.123456789
