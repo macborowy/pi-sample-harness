@@ -25,6 +25,10 @@ app.get('/api/version', (_req, res) => {
   res.json({ version: appVersion });
 });
 
+app.get('/api/message', (_req, res) => {
+  res.json({ message: 'Hello' });
+});
+
 app.get('/debug', (_req, res) => {
   res.json({
     time: new Date().toISOString(),

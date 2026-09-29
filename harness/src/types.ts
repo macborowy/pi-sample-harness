@@ -1,7 +1,6 @@
 export type AgentRole =
   | "frontend"
   | "backend"
-  | "cloud"
 
 export interface AgentTask {
   required: boolean
@@ -17,7 +16,6 @@ export interface FeaturePlan {
 
   frontend: AgentTask
   backend: AgentTask
-  cloud: AgentTask
 
   crossCuttingAcceptanceCriteria: string[]
 }
